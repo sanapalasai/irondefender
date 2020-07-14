@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Iron Defender</title>
+	<link rel="icon" type="image/png" href="images/icon.png">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,shrink-to-fit=no">
+	<meta name="name" content="Iron Defender">
+	<meta name="robotics" content="noindex,nofollow">
+	<style type="text/css">
+		body{
+			background-color: #e1e1e1;
+		}
+		#my_canvas{
+			background-color: #f0f0f0;
+		}
+	</style>
+</head>
+<body onload="man.start()">
+	<canvas id="my_canvas">
+		<audio id="ex_audio" src="assets/explosion.wav"></audio>
+		<audio id="be_audio" src="assets/beam.wav"></audio>
+		Your browser does not support canvas html5.
+	</canvas>
+	<script type="text/javascript">
+		var my_canvas = document.getElementById('my_canvas');
+		var ex_audio = document.getElementById('ex_audio');
+		var be_audio = document.getElementById('be_audio');
+		my_canvas.width = window.innerWidth - 15;
+		my_canvas.height = window.innerHeight - 20;
+		var i = new Image();
+		i.src = 'images/ironman2.png';
+		i.src = 'images/ironman.png';
+		var c = my_canvas.getContext('2d');
+		var b = new Image();
+		b.src = 'images/beam.png';
+		var co = new Image();
+		co.src = 'images/copter.png';
+		var enter = true;
+		var beams = [];
+		var copters = [];
+		var explosions = [];
+		window.addEventListener('keyup',function (e) {
+			if(e.key === 'Enter'){
+					if(enter === false){
+						console.log('Hello');
+						c.clearRect(0,0,my_canvas.width,my_canvas.height);
+						man.start();
+						enter = true;
+					}
+			}
+		})
+		var man = {
+			start : function () {
+				this.x = 10;
+				this.y = my_canvas.height/2 - 170;
+				this.width = 170;
+				this.height = 170;
+				this.interval = setInterval(update,20);
+				this.keys = [];
+				this.keys['w'] = false;
+				this.keys['s'] = false;
+				this.interval2 = setInterval(addCopters,5);
+				this.interval3 = setInterval(updateExplosion,40);
+				window.addEventListener('keydown',function (e) {
+					console.log(e.key);
+					if(e.key === 'w' || e.key === 'ArrowUp'){
+						man.keys['w'] = true;
+					}else if(e.key === 's' || e.key === 'ArrowDown'){
+						man.keys['s'] = true;
+					}
+					else if(e.key === ' '){
+						man.keys[e.key] = true;
+						i.src = 'images/ironman2.png';
+					}
+				});
+				window.addEventListener('keyup',function(e) {
+					if(e.key === 'w' || e.key === 'ArrowUp' ){
+						man.keys['w'] = false;
+					}else if(e.key === 's' || e.key === 'ArrowDown'){
+						man.keys['s'] = false;
+					}else if(e.key === ' '){
+						man.keys[e.key] = false;
+						if(beams.length < 6){
+							beams.push(new Beam(man.x,man.y));
+							be_audio.currentTime = 0;
+							be_audio.play();
+						}
+						i.src = 'images/ironman.png';
+					}
+				});
+				c.drawImage(i,this.x,this.y,this.width,this.height);
+			},
+			updateMan: function () {
+				if(this.keys['s'] && this.y+this.height < my_canvas.height){
+					this.y += 3;
+				}
+				if(this.keys['w'] && this.y >  10){
+					this.y -= 3;
+				}
+				c.clearRect(0,0,my_canvas.width,my_canvas.height);
+				c.drawImage(i,this.x,this.y,this.width,this.height);
+			}
+		}
+		function Beam (x1,y1) {
+			this.bx = x1+160;
+			this.by = y1+20;
+			this.width = 60;
+			this.height = 20;
+			this.updateBeam = function(){
+				if(this.bx < my_canvas.width){
+					this.bx += 4;
+				}
+				else{
+					beams.shift();
+				}
+				c.drawImage(b,this.bx,this.by,this.width,this.height);
+			}
+		}
+		function Copter(){
+			this.cx = my_canvas.width;
+			this.cy = getRndInteger(5,my_canvas.height-200);
+			this.height = 180;
+			this.width = 180;
+			this.speed = getRndInteger(1,7);
+			this.updateCopter = function() {
+				if(this.cx > 0){
+					this.cx -= this.speed;
+				}
+				c.drawImage(co,this.cx,this.cy,this.height,this.width);
+			}
+		}
+		function update () {
+			man.updateMan();
+			var i;
+			for(i=0;i<beams.length;i++){
+				beams[i].updateBeam();
+			}
+			for(i=0;i<copters.length;i++){
+				copters[i].updateCopter();
+			}
+			for(i=0;i<copters.length;i++){
+				if(copters[i].cx <= 120){
+					if(!(copters[i].cy > man.x+man.height || copters[i].cy+copters[i].height < man.y)){
+						explosions.push(new Explosion(man.x,man.y));
+						setTimeout(destroy,300);
+						clearTimeout(man.interval);
+						clearTimeout(man.interval2);
+						break;
+					}else{
+					c.clearRect(0,0,my_canvas.width,my_canvas.height);
+					c.font = '30px Arial';
+					c.textAlign = 'center';
+					c.strokeText('Iron man failed to defend the city.\nPress "Enter" to restart.',my_canvas.width/2,my_canvas.height/2);
+					clearTimeout(man.interval);
+					clearTimeout(man.interval2);
+					clearTimeout(man.interval3);
+					beams.splice(0,beams.length);
+					copters.splice(0,copters.length);
+					explosions.splice(0,explosions.length);
+					enter = false;
+					break;
+				}
+				}
+			}
+			for(i=0;i<beams.length;i++){
+				for(var j=0;j<copters.length;j++){
+					if(check(beams[i],copters[j])){
+						beams.splice(i,1);
+						copters.splice(j,1);
+						continue;
+					}
+				}
+			}
+		}
+		function getRndInteger(min, max) {
+  			return Math.floor(Math.random() * (max - min) ) + min;
+		}
+		function addCopters(){
+			var i;
+			var l = copters.length;
+			for(i=8-l;i>0;i--){
+				copters.push(new Copter());
+			}
+		}
+		function check(beam_ele,cop_ele) {
+			var a = {
+				left : beam_ele.bx,
+				right : beam_ele.bx + beam_ele.width,
+				top : beam_ele.by,
+				bottom : beam_ele.by + beam_ele.height
+			};
+			var b = {
+				left : cop_ele.cx,
+				right : cop_ele.cx + cop_ele.width,
+				top : cop_ele.cy,
+				bottom : cop_ele.cy +cop_ele.height
+			};
+			if(!(a.left>b.right || a.right<b.left || a.top>b.bottom || a.bottom<b.top)){
+				explosions.push(new Explosion(b.left,b.top));
+				ex_audio.currentTime = 0;
+				ex_audio.play();
+				return true;
+			}
+			return false;
+		}
+		function Explosion(ex,ey){
+			this.ex = ex;
+			this.ey = ey;
+			this.show = 1;
+			this.image = new Image();
+			this.updateExplode = function(){
+				this.image.src = 'images/layer_'+this.show+'.png';
+				c.drawImage(this.image,this.ex,this.ey,150,130);
+				this.show++;
+			}
+		}
+		function updateExplosion(){
+			var i;
+			for(i=0;i<explosions.length;i++){
+				if(explosions[i].show === 8){
+					explosions[i].updateExplode();
+					explosions.splice(i,1);
+					break;
+				}
+				else{
+					explosions[i].updateExplode();
+				}
+			}
+		}
+		function destroy(){
+			c.clearRect(0,0,my_canvas.width,my_canvas.height);
+			c.font = '30px Arial';
+			c.textAlign = 'center';
+			c.strokeText('Iron man failed to defend the city.\nPress "Enter" to restart.',my_canvas.width/2,my_canvas.height/2);
+			clearTimeout(man.interval3);
+			beams = [];
+			copters = [];
+			explosions = [];
+			enter = false;
+		}
+	</script>
+</body>
+</html>
