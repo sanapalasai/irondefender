@@ -13,9 +13,6 @@
 		#my_canvas{
 			background-color: #f0f0f0;
 		}
-		#invisi{
-			display:none;
-		}
 	</style>
 </head>
 <body onload="man.start()">
@@ -24,15 +21,6 @@
 		<audio id="be_audio" src="assets/beam.wav"></audio>
 		Your browser does not support canvas html5.
 	</canvas>
-	<img id="invisi" src="images/ironmantwo.png">
-	<img id="invisi" src="images/layer_1.png">
-	<img id="invisi" src="images/layer_2.png">
-	<img id="invisi" src="images/layer_3.png">
-	<img id="invisi" src="images/layer_4.png">
-	<img id="invisi" src="images/layer_5.png">
-	<img id="invisi" src="images/layer_6.png">
-	<img id="invisi" src="images/layer_7.png">
-	<img id="invisi" src="images/layer_8.png">
 	<script type="text/javascript">
 		var my_canvas = document.getElementById('my_canvas');
 		var ex_audio = document.getElementById('ex_audio');
@@ -60,7 +48,37 @@
 						enter = true;
 					}
 			}
-		})
+		});
+		var background1 = {
+			start: function () {
+				this.x = 0;
+				this.y = 0;
+				this.image = new Image();
+				this.image.src = 'images/back.jpg';
+			},
+			update: function(){
+				this.x -= 1;
+				if (this.x <= -my_canvas.width){
+					this.x = my_canvas.width;
+				}
+				c.drawImage(this.image,this.x,this.y,my_canvas.width,my_canvas.height);
+			}
+		}
+		var background2 = {
+			start: function () {
+				this.x = background1.x + my_canvas.width;
+				this.y = 0;
+				this.image = new Image();
+				this.image.src = 'images/back_alt.jpg';
+			},
+			update: function(){
+				this.x -= 1;
+				if (this.x <= -my_canvas.width){
+					this.x = my_canvas.width;
+				}
+				c.drawImage(this.image,this.x,this.y,my_canvas.width,my_canvas.height);
+			}
+		}
 		var man = {
 			start : function () {
 				this.x = 10;
@@ -73,6 +91,8 @@
 				this.keys['s'] = false;
 				this.interval2 = setInterval(addCopters,5);
 				this.interval3 = setInterval(updateExplosion,40);
+				background1.start();
+				background2.start();
 				window.addEventListener('keydown',function (e) {
 					console.log(e.key);
 					if(e.key === 'w' || e.key === 'ArrowUp'){
@@ -109,7 +129,6 @@
 				if(this.keys['w'] && this.y >  10){
 					this.y -= 3;
 				}
-				c.clearRect(0,0,my_canvas.width,my_canvas.height);
 				c.drawImage(i,this.x,this.y,this.width,this.height);
 			}
 		}
@@ -142,6 +161,9 @@
 			}
 		}
 		function update () {
+			c.clearRect(0,0,my_canvas.width,my_canvas.height);
+			background1.update();
+			background2.update();
 			man.updateMan();
 			var i;
 			for(i=0;i<beams.length;i++){
@@ -207,7 +229,7 @@
 				top : cop_ele.cy,
 				bottom : cop_ele.cy +cop_ele.height
 			};
-			if(!(a.left>b.right || a.right<b.left || a.top>b.bottom || a.bottom<b.top)){
+			if(!(a.left>b.right || a.right<(b.left+10) || a.top>b.bottom || a.bottom<b.top)){
 				explosions.push(new Explosion(b.left,b.top));
 				ex_audio.currentTime = 0;
 				ex_audio.play();
