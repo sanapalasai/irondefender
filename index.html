@@ -34,9 +34,11 @@
 	<img src="images/layer_7.png">
 	<img src="images/layer_8.png">
 	<script type="text/javascript">
+		var h_score = 0;
 		var my_canvas = document.getElementById('my_canvas');
 		var ex_audio = document.getElementById('ex_audio');
 		var be_audio = document.getElementById('be_audio');
+		ex_audio.volume = 0.8;
 		my_canvas.width = window.innerWidth - 15;
 		my_canvas.height = window.innerHeight - 20;
 		var i = new Image();
@@ -103,6 +105,7 @@
 				this.keys['s'] = false;
 				this.interval2 = setInterval(addCopters,5);
 				this.interval3 = setInterval(updateExplosion,40);
+				this.score = 0;
 				background1.start();
 				background2.start();
 				window.addEventListener('keydown',function (e) {
@@ -142,6 +145,10 @@
 					this.y -= 3;
 				}
 				c.drawImage(i,this.x,this.y,this.width,this.height);
+				c.font = "20px Arial";
+				c.textAlign = "center";
+				c.strokeText("High Score: "+h_score,my_canvas.width-200,20);
+				c.strokeText("Score : "+this.score,my_canvas.width-200,45);
 			}
 		}
 		function Beam (x1,y1) {
@@ -204,6 +211,9 @@
 					copters.splice(0,copters.length);
 					explosions.splice(0,explosions.length);
 					enter = false;
+					if(man.score > h_score){
+						h_score = man.score;
+					}
 					break;
 				}
 				}
@@ -211,6 +221,7 @@
 			for(i=0;i<beams.length;i++){
 				for(var j=0;j<copters.length;j++){
 					if(check(beams[i],copters[j])){
+						man.score += 5;
 						beams.splice(i,1);
 						copters.splice(j,1);
 						continue;
@@ -283,6 +294,9 @@
 			copters = [];
 			explosions = [];
 			enter = false;
+			if(man.score > h_score){
+				h_score = man.score;
+			}
 		}
 	</script>
 </body>
